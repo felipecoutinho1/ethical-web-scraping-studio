@@ -12,6 +12,8 @@ from src.scraper import ScrapingError, scrape_source
 from src.sources import SOURCES
 
 
+RESULT_SCHEMA_VERSION = 2
+
 st.set_page_config(page_title="Ethical Web Scraping Studio", page_icon="🕸️", layout="wide", initial_sidebar_state="expanded")
 st.markdown("""
 <style>
@@ -28,6 +30,9 @@ st.markdown("""
 
 if "language" not in st.session_state:
     st.session_state.language = "en"
+if st.session_state.get("result_schema_version") != RESULT_SCHEMA_VERSION:
+    st.session_state.pop("scrape_result", None)
+    st.session_state.result_schema_version = RESULT_SCHEMA_VERSION
 language = st.session_state.language
 
 
@@ -69,28 +74,31 @@ if st.button(t(language, "run"), type="primary", width="stretch"):
 
 if "scrape_result" in st.session_state:
     result = st.session_state.scrape_result
+    display_data = result.data.copy()
+    if result.source == "books" and "price" in display_data.columns:
+        display_data["price"] = display_data["price"].astype("string").str.replace("Â£", "£", regex=False)
     st.success(f"✓ {t(language, 'success')}")
     metrics = st.columns(5)
     metrics[0].metric(t(language, "pages"), result.pages_visited)
-    metrics[1].metric(t(language, "records"), len(result.data))
+    metrics[1].metric(t(language, "records"), len(display_data))
     metrics[2].metric(t(language, "requests"), result.requests_made)
     metrics[3].metric(t(language, "elapsed"), f"{result.elapsed_ms / 1000:.2f} s")
-    average = len(result.data) / max(result.pages_visited, 1)
+    average = len(display_data) / max(result.pages_visited, 1)
     metrics[4].metric(t(language, "average"), f"{average:.1f}")
 
     data_tab, summary_tab, log_tab = st.tabs([t(language, "data"), t(language, "summary"), t(language, "log")])
     with data_tab:
-        if result.data.empty:
+        if display_data.empty:
             st.info(t(language, "empty"))
         else:
             st.markdown(f"#### {t(language, 'preview')}")
-            st.dataframe(result.data, width="stretch", hide_index=True)
+            st.dataframe(display_data, width="stretch", hide_index=True)
     with summary_tab:
-        numeric = result.data.select_dtypes(include="number")
+        numeric = display_data.select_dtypes(include="number")
         if not numeric.empty:
             st.markdown(f"#### {t(language, 'numeric')}")
             st.dataframe(numeric.describe().T, width="stretch")
-        categorical = result.data.select_dtypes(exclude="number")
+        categorical = display_data.select_dtypes(exclude="number")
         if not categorical.empty:
             first_column = categorical.columns[0]
             counts = categorical[first_column].value_counts().head(10)
@@ -100,7 +108,7 @@ if "scrape_result" in st.session_state:
         st.dataframe(result.log, width="stretch", hide_index=True)
 
     left, right = st.columns(2)
-    left.download_button(t(language, "download_csv"), csv_bytes(result.data), f"{result.source}_scraped_data.csv", "text/csv", type="primary", width="stretch")
-    right.download_button(t(language, "download_json"), json_bytes(result.data), f"{result.source}_scraped_data.json", "application/json", width="stretch")
+    left.download_button(t(language, "download_csv"), csv_bytes(display_data), f"{result.source}_scraped_data.csv", "text/csv", type="primary", width="stretch")
+    right.download_button(t(language, "download_json"), json_bytes(display_data), f"{result.source}_scraped_data.json", "application/json", width="stretch")
 
 st.markdown(f'<div class="footer">{t(language, "footer")}</div>', unsafe_allow_html=True)
