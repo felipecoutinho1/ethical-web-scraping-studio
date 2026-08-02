@@ -91,6 +91,10 @@ def scrape_source(
             raise ScrapingError(f"Page {page_number} could not be downloaded.") from error
         if not 200 <= response.status_code < 300:
             raise ScrapingError(f"Page {page_number} returned HTTP {response.status_code}.")
+        detected_encoding = getattr(response, "apparent_encoding", None)
+        current_encoding = (getattr(response, "encoding", None) or "").lower()
+        if detected_encoding and current_encoding in ("", "iso-8859-1", "latin-1"):
+            response.encoding = detected_encoding
         page_records, next_url = source.parser(response.text, url)
         records.extend(page_records)
         log_rows.append({

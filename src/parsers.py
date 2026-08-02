@@ -21,7 +21,7 @@ def parse_books(html: str, page_url: str) -> tuple[list[dict], str | None]:
         rating_value = next((item for item in rating_classes if item != "star-rating"), "")
         records.append({
             "title": link.get("title", link.get_text(strip=True)),
-            "price": price.get_text(strip=True) if price else "",
+            "price": price.get_text(strip=True).replace("Â£", "£") if price else "",
             "availability": " ".join(availability.stripped_strings) if availability else "",
             "rating": rating_value,
             "product_url": urljoin(page_url, link.get("href", "")),

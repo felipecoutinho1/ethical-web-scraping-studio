@@ -31,8 +31,14 @@ class TestWebScraper(unittest.TestCase):
     def test_book_parser_extracts_fields_and_next_page(self):
         records, next_url = parse_books(BOOKS_HTML, "https://books.toscrape.com/catalogue/page-1.html")
         self.assertEqual(records[0]["title"], "Book A")
+        self.assertEqual(records[0]["price"], "£12.50")
         self.assertEqual(records[0]["rating"], "Three")
         self.assertEqual(next_url, "https://books.toscrape.com/catalogue/page-2.html")
+
+    def test_book_parser_repairs_common_currency_mojibake(self):
+        broken_html = BOOKS_HTML.replace("£12.50", "Â£12.50")
+        records, _ = parse_books(broken_html, "https://books.toscrape.com/")
+        self.assertEqual(records[0]["price"], "£12.50")
 
     def test_quote_parser_extracts_tags(self):
         records, next_url = parse_quotes(QUOTES_HTML, "https://quotes.toscrape.com/")
