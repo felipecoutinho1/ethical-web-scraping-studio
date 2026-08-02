@@ -32,7 +32,7 @@ Ethical Web Scraping Studio shows the complete collection workflow through a cli
 ## Run locally
 
 ```powershell
-git clone YOUR_REPOSITORY_URL
+git clone https://github.com/felipecoutinho1/ethical-web-scraping-studio.git
 cd ethical-web-scraping-studio
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
