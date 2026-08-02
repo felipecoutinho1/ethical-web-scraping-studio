@@ -2,6 +2,8 @@
 
 A responsible web data extraction application with allowlisted sources, robots.txt checks, polite delays, pagination limits and a transparent page-by-page execution log.
 
+**[Open the live application](https://ethical-web-scraping-fm.streamlit.app/)**
+
 This project demonstrates production-minded scraping rather than an unrestricted HTML downloader.
 
 ## Business value
